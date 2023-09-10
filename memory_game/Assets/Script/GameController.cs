@@ -11,22 +11,56 @@ public class GameController : MonoBehaviour
     [SerializeField] private Vector2 cardSpacing;
     [SerializeField] private Sprite[] cardSprites;
     
+    private enum BoardState
+    {
+        noCardFlipped,
+        oneCardFlipped,
+        endGame
+    }
+    private BoardState boardState;
+    private Card flippedCard;
+    
     private void Start()
     {
         var cardList = new List<Card>();
         InstantiateCards(cardList);
         ShuffleCards(cardList);
+        boardState = BoardState.noCardFlipped;
     }
 
     private void ShuffleCards(List<Card> cardList)
     {
         cardList.Shuffle();
-        var id = 0;
-        for (int i = 0; i < cardList.Count; i += 2)
+        for (int i = 0; i < cardList.Count; i ++)
         {
-            cardList[i].SetId(id, cardSprites[id]);
-            cardList[i + 1].SetId(id, cardSprites[id]);
-            id++;
+            var id = i / 2;
+            cardList[i].Init(id, cardSprites[id], OnCardFlipped);
+        }
+    }
+
+    private void OnCardFlipped(Card card)
+    {
+        Debug.Log($"Carta {card.id} virou");
+        switch (boardState)
+        {
+            case BoardState.noCardFlipped:
+                boardState = BoardState.oneCardFlipped;
+                flippedCard = card;
+                break;
+            case BoardState.oneCardFlipped:
+                if (card.id == flippedCard.id)
+                {
+                    Debug.Log("Cartas sao iguais");
+                }
+                else
+                {
+                    Debug.Log("Cartas diferentes");
+                    card.FlipCard(true);
+                    flippedCard.FlipCard(true);
+                }
+                boardState = BoardState.noCardFlipped;
+                flippedCard = null;
+                break;
         }
     }
 
